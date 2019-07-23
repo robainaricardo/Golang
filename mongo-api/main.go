@@ -1,6 +1,6 @@
-// Esse é apenas um exemplo de API simples para conexão com o banco de dados
+// Package mongoapi sse é apenas um exemplo de API simples para conexão com o banco de dados
 // MongoDB e que contém operações CRUD
-package main
+package mongoapi
 
 import (
 	"context"
@@ -19,6 +19,7 @@ type User struct {
 	Age   int    `json:"age,omitempty"`
 }
 
+/*
 func main() {
 
 	// Data base conection
@@ -62,11 +63,12 @@ func main() {
 
 	//Delete
 	filtro = bson.D{{"name", "Ricardo"}}
-	//ExcluirUsuario(*client, *collection, filtro)
+	ExcluirUsuario(*client, *collection, filtro)
 
-	//ZerarColecao(*client, *collection)
+	ZerarColecao(*client, *collection)
 
 }
+*/
 
 // IniciarConexao inicia uma conexão com o banco de dados.
 func IniciarConexao(uri string) *mongo.Client {
