@@ -15,14 +15,14 @@ import (
 func getAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	URI := "mongodb://localhost:27017"
-	client := mong.IniciarConexao(URI)
+	client := mong.StartConnection(URI)
 	collection := client.Database("golang-test").Collection("users")
 
-	defer mong.EncerrarConexao(*client)
+	defer mong.CloseConnection(*client)
 
 	var users []mong.User
 
-	users = mong.ConsultarUsuarios(*client, *collection, bson.D{{}})
+	users = mong.QueryUsers(*client, *collection, bson.D{{}})
 
 	for _, u := range users {
 		fmt.Println(u)
@@ -37,13 +37,13 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	email := vars["email"]
 
 	URI := "mongodb://localhost:27017"
-	client := mong.IniciarConexao(URI)
+	client := mong.StartConnection(URI)
 	collection := client.Database("golang-test").Collection("users")
 
-	defer mong.EncerrarConexao(*client)
+	defer mong.CloseConnection(*client)
 
 	consulta := bson.D{{"email", email}}
-	user := mong.ConsultarUsuario(*client, *collection, consulta)
+	user := mong.QueryUser(*client, *collection, consulta)
 
 	json.NewEncoder(w).Encode(user)
 }
@@ -52,6 +52,7 @@ func postUser(w http.ResponseWriter, r *http.Request) {
 	userName := r.FormValue("name")
 	userMail := r.FormValue("email")
 	userAge := r.FormValue("age")
+	fmt.Println(userName, userMail, userAge)
 	age, err := strconv.Atoi(userAge)
 	if err != nil {
 		log.Fatal(err)
@@ -60,12 +61,12 @@ func postUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(user)
 
 	URI := "mongodb://localhost:27017"
-	client := mong.IniciarConexao(URI)
+	client := mong.StartConnection(URI)
 	collection := client.Database("golang-test").Collection("users")
 
-	defer mong.EncerrarConexao(*client)
+	defer mong.CloseConnection(*client)
 
-	mong.InserirUsuario(*client, *collection, user)
+	mong.InsertUser(*client, *collection, user)
 
 }
 
@@ -78,6 +79,7 @@ func putUser(w http.ResponseWriter, r *http.Request) {
 	userName := r.FormValue("name")
 	userMail := r.FormValue("email")
 	userAge := r.FormValue("age")
+
 	age, err := strconv.Atoi(userAge)
 	if err != nil {
 		log.Fatal(err)
@@ -85,16 +87,16 @@ func putUser(w http.ResponseWriter, r *http.Request) {
 	user := mong.User{userName, userMail, age}
 
 	URI := "mongodb://localhost:27017"
-	client := mong.IniciarConexao(URI)
+	client := mong.StartConnection(URI)
 	collection := client.Database("golang-test").Collection("users")
-	defer mong.EncerrarConexao(*client)
+	defer mong.CloseConnection(*client)
 
 	consulta := bson.D{{"email", email}}
 	atualizacao := bson.D{
 		{"$set", bson.D{{"name", user.Name}}},
 		{"$set", bson.D{{"email", user.Email}}},
 		{"$set", bson.D{{"age", user.Age}}}}
-	mong.AtualizarUsuario(*client, *collection, consulta, atualizacao)
+	mong.UpdateUser(*client, *collection, consulta, atualizacao)
 
 }
 
@@ -105,13 +107,13 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	email := vars["email"]
 
 	URI := "mongodb://localhost:27017"
-	client := mong.IniciarConexao(URI)
+	client := mong.StartConnection(URI)
 	collection := client.Database("golang-test").Collection("users")
 
-	defer mong.EncerrarConexao(*client)
+	defer mong.CloseConnection(*client)
 
 	consulta := bson.D{{"email", email}}
-	mong.ExcluirUsuario(*client, *collection, consulta)
+	mong.DeleteUser(*client, *collection, consulta)
 
 }
 
@@ -137,4 +139,5 @@ func main() {
 	fmt.Println("API: on")
 	defer fmt.Println("API: off")
 	handleRequests()
+
 }
