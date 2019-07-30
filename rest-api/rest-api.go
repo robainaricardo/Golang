@@ -20,15 +20,18 @@ func getAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	defer mong.CloseConnection(*client)
 
-	var users []mong.User
+	users, err := mong.QueryUsers(*client, *collection, bson.D{{}})
 
-	users = mong.QueryUsers(*client, *collection, bson.D{{}})
+	if err != nil {
+		fmt.Fprintf(w, "400 - Bad Requestion")
+	} else {
+		for _, u := range users {
+			fmt.Println(u)
+		}
 
-	for _, u := range users {
-		fmt.Println(u)
+		json.NewEncoder(w).Encode(users)
 	}
 
-	json.NewEncoder(w).Encode(users)
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
@@ -43,9 +46,13 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	defer mong.CloseConnection(*client)
 
 	consulta := bson.D{{"email", email}}
-	user := mong.QueryUser(*client, *collection, consulta)
+	user, err := mong.QueryUser(*client, *collection, consulta)
 
-	json.NewEncoder(w).Encode(user)
+	if err != nil {
+		fmt.Fprintf(w, "404 - Not Found")
+	} else {
+		json.NewEncoder(w).Encode(user)
+	}
 }
 
 func postUser(w http.ResponseWriter, r *http.Request) {
@@ -96,8 +103,12 @@ func putUser(w http.ResponseWriter, r *http.Request) {
 		{"$set", bson.D{{"name", user.Name}}},
 		{"$set", bson.D{{"email", user.Email}}},
 		{"$set", bson.D{{"age", user.Age}}}}
-	mong.UpdateUser(*client, *collection, consulta, atualizacao)
 
+	err = mong.UpdateUser(*client, *collection, consulta, atualizacao)
+
+	if err != nil {
+		fmt.Fprintf(w, "400 - Bad Request")
+	}
 }
 
 //	Delete a user by an email passed in lolcalhost:8081/users/email
@@ -113,13 +124,19 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	defer mong.CloseConnection(*client)
 
 	consulta := bson.D{{"email", email}}
-	mong.DeleteUser(*client, *collection, consulta)
 
+	err := mong.DeleteUser(*client, *collection, consulta)
+
+	if err != nil {
+		fmt.Fprintf(w, "400 - Bad Request")
+	} else {
+		fmt.Fprintf(w, "200 - Ok")
+	}
 }
 
 // homePage returns a simple message of this API
 func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "This is a simple REST API writen in Golang that uses MongoDB database.")
+	fmt.Fprintf(w, "This is a simple REST API writen in Golang that uses MongoDB as database.")
 }
 
 //	Trata das requisições (mapeia a requisição para a função adequada)
@@ -139,5 +156,4 @@ func main() {
 	fmt.Println("API: on")
 	defer fmt.Println("API: off")
 	handleRequests()
-
 }
